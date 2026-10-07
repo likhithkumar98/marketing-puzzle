@@ -1,0 +1,31 @@
+# Local History (editor extension)
+.history/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editor / IDE
+.idea/
+*.swp
+*.swo
+*~
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Secrets (if you ever split config out of index.html)
+.env
+.env.*
+!.env.example
+
+# Optional tooling
+node_modules/
+dist/
+build/
