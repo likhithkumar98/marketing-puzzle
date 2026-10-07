@@ -1,0 +1,21 @@
+{
+  "rules": {
+    "$path": {
+      ".read": true,
+      ".indexOn": ["score", "group"],
+      "$id": {
+        ".write": "!data.exists() && newData.exists()",
+        ".validate": "newData.hasChildren(['name', 'group', 'score', 'wrong', 'timeSec', 'acc', 'at'])",
+        "name":    { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30" },
+        "group":   { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40" },
+        "score":   { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1500" },
+        "wrong":   { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 500" },
+        "timeSec": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 86400" },
+        "acc":     { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100" },
+        "missed":  { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 50" },
+        "at":      { ".validate": "newData.val() == now" },
+        "$other":  { ".validate": false }
+      }
+    }
+  }
+}

@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Marketing Mastery — Puzzle</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧩</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14171F;--frame:#1D2230;--frame-line:#2A3040;--raise:#242A3A;--raise-hi:#2C3345;
+  --paper:#F5EFE3;--coral:#FF5A44;--gold:#F2B705;--teal:#12877C;--teal-hi:#1FB3A4;--magenta:#D6336C;--muted:#8B90A0;
+  --display:'Space Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --body:'Work Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;}
+html{background:var(--ink);}
+body{
+  background:var(--ink);color:var(--paper);font-family:var(--body);min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  padding:calc(28px + env(safe-area-inset-top,0px)) 16px calc(48px + env(safe-area-inset-bottom,0px));
+}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important;}}
+button{font:inherit;}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+
+/* ---------- top bar ---------- */
+.topbar{width:100%;max-width:720px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap;}
+.brand{font-family:var(--display);font-weight:700;font-size:15px;color:var(--coral);margin:0;}
+.top-actions{display:flex;gap:8px;align-items:center;}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);background:var(--frame);border:1px solid var(--frame-line);padding:6px 10px;border-radius:999px;}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);}
+.dot.live{background:var(--teal-hi);box-shadow:0 0 0 3px rgba(31,179,164,.2);}
+.dot.err{background:var(--magenta);}
+
+.intro{text-align:center;max-width:560px;margin-bottom:22px;}
+h1{font-family:var(--display);font-size:clamp(28px,4.5vw,42px);line-height:1.05;margin:0 0 10px;font-weight:700;}
+.intro p{color:var(--muted);font-size:15px;line-height:1.5;margin:0;}
+.player-tag{font-size:14px;color:var(--muted);margin:10px 0 0;}
+.player-tag strong{color:var(--paper);font-weight:600;}
+
+/* ---------- HUD ---------- */
+.hud{width:100%;max-width:720px;display:flex;align-items:center;gap:14px;margin-bottom:14px;}
+.hud-track{flex:1;height:8px;border-radius:999px;background:var(--frame-line);overflow:hidden;}
+.hud-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--gold),var(--coral));transition:width .5s cubic-bezier(.4,0,.2,1);}
+.hud-stat{font-family:var(--display);font-weight:700;font-size:14px;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.hud-stat span{color:var(--muted);font-weight:500;}
+
+/* ---------- board ---------- */
+.board-frame{position:relative;width:100%;max-width:720px;aspect-ratio:4/3;background:var(--frame);border-radius:18px;padding:10px;box-shadow:0 20px 60px rgba(0,0,0,.45);}
+.board-inner{position:relative;width:100%;height:100%;border-radius:12px;overflow:hidden;}
+.back-art{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;
+  background:radial-gradient(circle at 18% 20%,rgba(255,90,68,.35),transparent 45%),radial-gradient(circle at 85% 80%,rgba(18,135,124,.4),transparent 50%),linear-gradient(135deg,#262C3D 0%,#1A1E29 100%);}
+.back-art::before,.back-art::after{content:"";position:absolute;border-radius:50%;border:2px dashed rgba(245,239,227,.15);}
+.back-art::before{width:230px;height:230px;}
+.back-art::after{width:340px;height:340px;border-color:rgba(242,183,5,.12);}
+.art-text{position:relative;font-family:var(--display);font-weight:700;line-height:.95;}
+.art-text .l1{display:block;font-size:clamp(30px,7vw,54px);background:linear-gradient(90deg,var(--gold),var(--coral));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.art-text .l2{display:block;font-size:clamp(30px,7vw,54px);}
+.art-sub{position:relative;margin-top:8px;font-size:12px;letter-spacing:.18em;color:var(--teal-hi);background:rgba(20,23,31,.4);padding:4px 10px;border-radius:999px;display:inline-block;}
+.tile-grid{position:absolute;inset:0;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr);gap:3px;background:var(--frame);}
+.tile{position:relative;border:none;background:#20263A;color:var(--paper);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-family:var(--display);padding:4px;transition:transform .35s ease,opacity .35s ease,background .2s ease;}
+.tile .tnum{font-size:clamp(15px,3vw,22px);font-weight:700;opacity:.9;}
+.tile .tcat{font-family:var(--body);font-size:clamp(9px,1.6vw,11px);color:var(--muted);text-align:center;padding:0 4px;line-height:1.25;}
+.tile .bar{position:absolute;top:0;left:0;right:0;height:3px;}
+.tile:hover:not(.solved){background:#2A3247;transform:scale(1.03);z-index:2;}
+.tile:focus-visible{outline-offset:-2px;z-index:3;}
+.tile.wrong-flash{animation:shake .4s ease;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-4px);}75%{transform:translateX(4px);}}
+.tile.solved{opacity:0;transform:scale(1.15);pointer-events:none;}
+@media (max-width:520px){
+  .board-frame{aspect-ratio:3/4;}
+  .tile-grid{grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,1fr);}
+  .hud{flex-wrap:wrap;} .hud-track{order:5;flex-basis:100%;}
+}
+footer{margin-top:24px;font-size:12.5px;color:var(--muted);text-align:center;max-width:520px;line-height:1.6;}
+kbd{font-family:var(--display);font-size:11px;background:var(--raise);border:1px solid var(--frame-line);border-radius:4px;padding:1px 5px;color:var(--paper);}
+
+/* ---------- modals ---------- */
+.overlay{position:fixed;inset:0;background:rgba(10,11,15,.76);display:none;align-items:center;justify-content:center;padding:20px;z-index:50;overflow-y:auto;}
+.overlay.open{display:flex;}
+.card{width:100%;max-width:440px;background:var(--frame);border:1px solid var(--frame-line);border-radius:16px;padding:26px 24px 22px;position:relative;animation:cardIn .25s cubic-bezier(.4,0,.2,1) both;margin:auto;}
+@keyframes cardIn{from{opacity:0;transform:translateY(8px) scale(.98);}to{opacity:1;transform:none;}}
+.card h2{font-family:var(--display);font-weight:700;font-size:21px;margin:0 0 6px;}
+.card .sub{color:var(--muted);font-size:14px;line-height:1.5;margin:0 0 18px;}
+.xbtn{position:absolute;top:12px;right:12px;background:none;border:none;color:var(--muted);font-size:20px;line-height:1;cursor:pointer;padding:6px;border-radius:6px;}
+.xbtn:hover{color:var(--paper);}
+
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.field label{font-size:13px;color:var(--muted);}
+.field input,.field select{font-family:var(--body);font-size:16px;padding:11px 12px;border-radius:10px;border:1px solid var(--frame-line);background:var(--raise);color:var(--paper);width:100%;}
+.form-error{color:var(--magenta);font-size:13px;min-height:18px;margin:0 0 8px;}
+
+.btn{border:none;cursor:pointer;font-family:var(--display);font-weight:700;font-size:14px;padding:12px 24px;border-radius:999px;}
+.btn-primary{background:linear-gradient(90deg,var(--coral),var(--gold));color:var(--ink);}
+.btn-primary:hover{filter:brightness(1.06);}
+.btn-ghost{background:none;border:1px solid var(--frame-line);color:var(--paper);}
+.btn-ghost:hover{background:var(--raise);border-color:#3A415A;}
+.btn-small{padding:7px 14px;font-size:13px;}
+.btn-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+
+/* question */
+.qcat{font-family:var(--display);font-size:12px;letter-spacing:.05em;color:var(--gold);margin:0 0 10px;}
+.qtext{font-family:var(--body);font-weight:600;font-size:18px;line-height:1.4;margin:0 0 18px;}
+.options{display:flex;flex-direction:column;gap:9px;}
+.opt{display:flex;align-items:center;gap:12px;text-align:left;padding:11px 14px;border-radius:10px;border:1px solid var(--frame-line);background:var(--raise);color:var(--paper);font-size:14.5px;cursor:pointer;transition:background .15s ease,border-color .15s ease,opacity .15s ease;}
+.opt .key{flex:none;width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-family:var(--display);font-size:12px;font-weight:700;background:var(--frame);color:var(--muted);}
+.opt:hover:not(:disabled){background:var(--raise-hi);border-color:#3A415A;}
+.opt.correct{background:rgba(18,135,124,.25);border-color:var(--teal);}
+.opt.incorrect{background:rgba(214,51,108,.14);border-color:var(--magenta);opacity:.6;text-decoration:line-through;text-decoration-color:rgba(245,239,227,.4);}
+.opt:disabled{cursor:default;}
+.feedback{margin-top:14px;font-size:13.5px;min-height:18px;font-weight:500;}
+.feedback.bad{color:var(--magenta);}
+.explain{margin-top:14px;padding:12px 14px;border-radius:10px;background:rgba(18,135,124,.12);border-left:3px solid var(--teal-hi);font-size:14px;line-height:1.5;}
+.explain strong{color:var(--teal-hi);}
+.explain-actions{margin-top:14px;display:flex;justify-content:flex-end;}
+
+/* win */
+.win-card{max-width:480px;text-align:center;}
+.badge{width:64px;height:64px;margin:0 auto 12px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--coral));display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:700;font-size:24px;color:var(--ink);}
+.win-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:16px 0;}
+.win-stats .num{font-family:var(--display);font-size:22px;font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums;}
+.win-stats .lbl{font-size:11px;color:var(--muted);letter-spacing:.04em;}
+.rank-line{font-size:15px;margin:0 0 6px;min-height:22px;}
+.rank-line strong{color:var(--gold);}
+.save-status{font-size:12.5px;color:var(--muted);min-height:16px;margin:0 0 16px;}
+.review{text-align:left;margin:0 0 18px;border:1px solid var(--frame-line);border-radius:10px;}
+.review summary{cursor:pointer;padding:10px 14px;font-size:14px;font-weight:500;}
+.review ol{margin:0;padding:0 14px 12px 34px;max-height:34vh;overflow:auto;}
+.review li{font-size:13.5px;line-height:1.45;margin-bottom:10px;}
+.review .ans{color:var(--teal-hi);font-weight:600;}
+.review .why{color:var(--muted);}
+
+/* leaderboard */
+.lb-card{max-width:600px;}
+.lb-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 6px;margin:6px 0 10px;}
+.tab{flex:none;background:var(--raise);border:1px solid var(--frame-line);color:var(--muted);font-size:13px;padding:6px 12px;border-radius:999px;cursor:pointer;}
+.tab[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:var(--ink);font-weight:600;}
+.tab.standings[aria-pressed="false"]{color:var(--teal-hi);border-color:rgba(31,179,164,.4);}
+.lb-tools{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;font-size:13px;color:var(--muted);flex-wrap:wrap;}
+.toggle{display:inline-flex;align-items:center;gap:8px;cursor:pointer;}
+.toggle input{accent-color:var(--gold);width:16px;height:16px;}
+.podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:8px;align-items:end;margin-bottom:12px;}
+.pod{background:var(--raise);border:1px solid var(--frame-line);border-radius:12px;padding:12px 8px;text-align:center;min-width:0;}
+.pod.p1{border-color:var(--gold);background:linear-gradient(180deg,rgba(242,183,5,.16),var(--raise));padding-top:18px;}
+.pod .medal{font-size:22px;line-height:1;}
+.pod .pname{font-weight:600;font-size:14px;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pod .pgroup{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pod .pscore{font-family:var(--display);font-weight:700;font-size:18px;color:var(--gold);margin-top:4px;}
+.pod.empty{opacity:.35;}
+.lb-wrap{max-height:42vh;overflow:auto;border:1px solid var(--frame-line);border-radius:10px;}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th{position:sticky;top:0;background:var(--raise);color:var(--muted);font-weight:500;font-size:12px;text-align:left;padding:8px 10px;}
+td{padding:8px 10px;border-top:1px solid var(--frame-line);}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
+td.rank{font-family:var(--display);font-weight:700;color:var(--gold);width:36px;}
+td.name{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+tr.me td{background:rgba(242,183,5,.12);}
+.empty-msg{padding:22px;text-align:center;color:var(--muted);font-size:14px;}
+.lb-foot{margin-top:12px;font-size:12px;color:var(--muted);}
+@media (max-width:520px){ .win-stats{grid-template-columns:repeat(2,1fr);} .hide-sm{display:none;} }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <p class="brand">Marketing Mastery</p>
+  <div class="top-actions">
+    <span class="chip" id="connChip"><span class="dot" id="connDot"></span><span id="connText">Connecting…</span></span>
+    <button class="btn btn-ghost btn-small" id="topLbBtn">Leaderboard</button>
+  </div>
+</header>
+
+<div class="intro">
+  <h1>Marketing Mastery</h1>
+  <p>Answer each question to knock out its tile and reveal the picture underneath. Fast, accurate answers climb the leaderboard.</p>
+  <p class="player-tag" id="playerTag" hidden></p>
+</div>
+
+<div class="hud" aria-live="polite">
+  <span class="hud-stat" id="hudSolved">0<span> / 12</span></span>
+  <div class="hud-track" aria-hidden="true"><div class="hud-fill" id="hudFill"></div></div>
+  <span class="hud-stat" id="hudWrong">0<span> misses</span></span>
+  <span class="hud-stat" id="hudTime">0:00</span>
+</div>
+
+<div class="board-frame">
+  <div class="board-inner">
+    <div class="back-art"><div>
+      <div class="art-text"><span class="l1">MARKETING</span><span class="l2">PRO</span></div>
+      <span class="art-sub" id="artSub">CERTIFIED</span>
+    </div></div>
+    <div class="tile-grid" id="tileGrid"></div>
+  </div>
+</div>
+
+<footer>
+  Score: 100 per tile, −25 per miss, plus up to 300 for speed.<br>
+  Shortcuts: <kbd>1</kbd>–<kbd>4</kbd> pick an answer · <kbd>Enter</kbd> continue · <kbd>Esc</kbd> close.
+  <br><button class="btn btn-ghost btn-small" id="changePlayer" style="margin-top:10px">Change player</button>
+</footer>
+
+<!-- Start -->
+<div class="overlay open" id="startOverlay">
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="startTitle">
+    <h2 id="startTitle">Who's playing?</h2>
+    <p class="sub">Enter your name and choose your class group. Your score is added to the leaderboard when you finish.</p>
+    <div class="field"><label for="playerName">Your name</label><input id="playerName" maxlength="30" autocomplete="off" placeholder="e.g. Priya S."></div>
+    <div class="field"><label for="playerGroup">Class group</label><select id="playerGroup"></select></div>
+    <p class="form-error" id="startError" aria-live="polite"></p>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="startBtn">Start puzzle</button>
+      <button class="btn btn-ghost" id="startLbBtn">Leaderboard</button>
+    </div>
+  </div>
+</div>
+
+<!-- Question -->
+<div class="overlay" id="qOverlay">
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="qText">
+    <button class="xbtn" id="qClose" aria-label="Close">✕</button>
+    <p class="qcat" id="qCat"></p>
+    <h2 class="qtext" id="qText"></h2>
+    <div class="options" id="qOptions"></div>
+    <p class="feedback" id="qFeedback" aria-live="polite"></p>
+    <div id="qExplainWrap" hidden>
+      <div class="explain" id="qExplain"></div>
+      <div class="explain-actions"><button class="btn btn-primary btn-small" id="qContinue">Continue</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Win -->
+<div class="overlay" id="winOverlay">
+  <div class="card win-card" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+    <div class="badge" id="winBadge">A+</div>
+    <h2 id="winTitle">Puzzle complete</h2>
+    <p class="rank-line" id="rankLine"></p>
+    <div class="win-stats">
+      <div><div class="num" id="winScore">0</div><div class="lbl">SCORE</div></div>
+      <div><div class="num" id="winAcc">100%</div><div class="lbl">ACCURACY</div></div>
+      <div><div class="num" id="winWrong">0</div><div class="lbl">MISSES</div></div>
+      <div><div class="num" id="winTime">0:00</div><div class="lbl">TIME</div></div>
+    </div>
+    <p class="save-status" id="saveStatus" aria-live="polite"></p>
+    <details class="review" id="reviewBox" hidden>
+      <summary id="reviewSummary">Review the questions you missed</summary>
+      <ol id="reviewList"></ol>
+    </details>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="nextPlayer">Next player</button>
+      <button class="btn btn-ghost" id="samePlayer">Play again</button>
+      <button class="btn btn-ghost" id="winLbBtn">Leaderboard</button>
+    </div>
+  </div>
+</div>
+
+<!-- Leaderboard -->
+<div class="overlay" id="lbOverlay">
+  <div class="card lb-card" role="dialog" aria-modal="true" aria-labelledby="lbTitle">
+    <button class="xbtn" id="lbClose" aria-label="Close">✕</button>
+    <h2 id="lbTitle">Leaderboard</h2>
+    <p class="sub" id="lbSub" style="margin-bottom:4px">Top scores across all groups</p>
+    <div class="tabs" id="lbTabs" role="group" aria-label="Choose a view"></div>
+    <div id="lbPlayers">
+      <div class="lb-tools">
+        <label class="toggle"><input type="checkbox" id="bestOnly" checked> Best score per player</label>
+        <span id="lbCount"></span>
+      </div>
+      <div class="podium" id="podium"></div>
+      <div class="lb-wrap" id="lbTableWrap">
+        <table><thead><tr><th>#</th><th>Name</th><th class="hide-sm">Group</th><th class="num">Score</th><th class="num hide-sm">Misses</th><th class="num">Time</th></tr></thead>
+        <tbody id="lbBody"></tbody></table>
+        <div class="empty-msg" id="lbEmpty" hidden>No scores yet. Finish the puzzle to be first.</div>
+      </div>
+    </div>
+    <div id="lbGroups" hidden>
+      <div class="lb-wrap">
+        <table><thead><tr><th>#</th><th>Group</th><th class="num">Players</th><th class="num">Avg best</th><th class="num">Top score</th></tr></thead>
+        <tbody id="grpBody"></tbody></table>
+        <div class="empty-msg" id="grpEmpty" hidden>No scores yet.</div>
+      </div>
+    </div>
+    <p class="lb-foot" id="lbFoot"></p>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   FIREBASE + CLASS SETTINGS  —  the only part you need to edit
+   Paste your values from: Firebase console → Project settings (gear) →
+   General → Your apps → Web app → "SDK setup and configuration" → Config.
+   databaseURL is at the top of: Build → Realtime Database → Data.
+   ===================================================================== */
+window.APP_CONFIG = {
+  firebase: {
+    apiKey:            "PASTE_API_KEY",
+    authDomain:        "your-project.firebaseapp.com",
+    databaseURL:       "https://your-project-default-rtdb.firebaseio.com",
+    projectId:         "your-project",
+    storageBucket:     "your-project.appspot.com",
+    messagingSenderId: "000000000000",
+    appId:             "1:000000000000:web:0000000000000000"
+  },
+  groups: ["Class A", "Class B"],   // class groups on the start screen
+  scoresPath: "scores",             // change (e.g. "scores-term2") for a fresh leaderboard
+  tilesPerGame: 12
+};
+</script>
+<script type="module">
+/* ===================== CONFIG ===================== */
+const CFG = window.APP_CONFIG || {};
+const GROUPS = Array.isArray(CFG.groups) && CFG.groups.length ? CFG.groups : ["Class A","Class B"];
+const SCORES_PATH = CFG.scoresPath || "scores";
+const TILES = Math.min(CFG.tilesPerGame || 12, 12);
+const LOCAL_KEY = "mm-puzzle-scores:" + SCORES_PATH;
+const FIREBASE_VER = "10.12.2";
+const $ = id => document.getElementById(id);
+
+/* ===================== QUESTION BANK ===================== */
+const BANK = [
+ {cat:"Marketing Mix",q:"Which of these is NOT one of the traditional 4Ps of marketing?",opts:["Product","Place","Promotion","Profit"],answer:3,why:"The 4Ps are Product, Price, Place and Promotion. Profit is an outcome, not a lever in the mix."},
+ {cat:"Marketing Mix",q:"Which is one of the extra Ps in the 7Ps model for services?",opts:["People","Profit","Patents","Partners"],answer:0,why:"The 7Ps add People, Process and Physical evidence to the original 4Ps."},
+ {cat:"STP Model",q:"What does the “T” stand for in the STP marketing model?",opts:["Timing","Trends","Targeting","Tracking"],answer:2,why:"STP is Segmentation, Targeting, Positioning: split the market, choose who to serve, then decide how to be seen."},
+ {cat:"Positioning",q:"USP stands for:",opts:["Unified Sales Plan","Unique Selling Proposition","User Satisfaction Point","Universal Service Pricing"],answer:1,why:"A Unique Selling Proposition is the distinct benefit that sets a product apart from competitors."},
+ {cat:"Positioning",q:"A positioning statement mainly defines:",opts:["Manufacturing cost targets","How the brand is perceived versus competitors","The org chart of the marketing team","Annual sales quotas"],answer:1,why:"Positioning is about the place a brand holds in customers' minds relative to alternatives."},
+ {cat:"SWOT Analysis",q:"In a SWOT analysis, which factor is internal to the company?",opts:["Opportunities","Threats","Strengths","Market trends"],answer:2,why:"Strengths and Weaknesses are internal; Opportunities and Threats come from the outside environment."},
+ {cat:"AIDA Funnel",q:"In the AIDA model, what stage comes right after “Interest”?",opts:["Awareness","Desire","Action","Decision"],answer:1,why:"AIDA runs Attention (or Awareness) → Interest → Desire → Action."},
+ {cat:"Metrics",q:"What does CAC measure in marketing?",opts:["Customer Acquisition Cost","Content Approval Cycle","Channel Attribution Count","Customer Advocacy Curve"],answer:0,why:"CAC is total sales and marketing spend divided by the number of new customers gained."},
+ {cat:"Metrics",q:"Customer Lifetime Value (CLV) estimates:",opts:["How long a customer has been subscribed","The total revenue a customer brings over the whole relationship","The cost of one advertisement","A customer's credit score"],answer:1,why:"CLV estimates the total value of a customer over time. Comparing it to CAC shows whether growth is profitable."},
+ {cat:"Metrics",q:"Click-through rate (CTR) is calculated as:",opts:["Clicks ÷ impressions","Sales ÷ clicks","Impressions ÷ budget","Visitors ÷ sales"],answer:0,why:"CTR = clicks divided by impressions, usually shown as a percentage."},
+ {cat:"Metrics",q:"Conversion rate measures:",opts:["How many ads were shown","The share of visitors who complete a desired action","How fast a page loads","The number of followers gained"],answer:1,why:"Conversion rate is the percentage of visitors who do what you want, such as buying or signing up."},
+ {cat:"Metrics",q:"Churn rate refers to:",opts:["New customers each month","The percentage of customers who stop buying or cancel","Growth in website traffic","Price increases over time"],answer:1,why:"Churn is the share of customers lost over a period. Lower churn usually means higher lifetime value."},
+ {cat:"Metrics",q:"Net Promoter Score (NPS) is based on asking customers:",opts:["How much they earn","How likely they are to recommend you","How often they shop online","Which competitor they prefer"],answer:1,why:"NPS asks how likely someone is to recommend you on a 0–10 scale; promoters minus detractors gives the score."},
+ {cat:"Metrics",q:"KPI stands for:",opts:["Key Performance Indicator","Known Product Inventory","Keyword Placement Index","Key Pricing Input"],answer:0,why:"A KPI is a measurable value that shows progress toward an important goal."},
+ {cat:"Branding",q:"“Brand equity” best refers to:",opts:["The company's total ad budget","The value a brand adds beyond the product's function","The number of trademarks owned","The price of the brand's stock"],answer:1,why:"Brand equity is the extra value a name carries, which is why people pay more for brands they trust."},
+ {cat:"Customer Journey",q:"Which stage typically comes first in a customer journey?",opts:["Retention","Advocacy","Awareness","Purchase"],answer:2,why:"Customers must first become aware of a brand before they consider, buy, stay and recommend."},
+ {cat:"Segmentation",q:"Splitting a market by age, gender and income is called ___ segmentation.",opts:["Geographic","Demographic","Behavioral","Psychographic"],answer:1,why:"Demographic segmentation uses measurable population traits like age, gender and income."},
+ {cat:"Segmentation",q:"Segmenting customers by lifestyle, values and personality is:",opts:["Psychographic","Geographic","Demographic","Firmographic"],answer:0,why:"Psychographic segmentation groups people by how they think and live rather than who they are on paper."},
+ {cat:"Pricing",q:"Launching at a low price to win market share quickly is called:",opts:["Price skimming","Penetration pricing","Premium pricing","Cost-plus pricing"],answer:1,why:"Penetration pricing starts low to attract many buyers fast, then may raise prices later."},
+ {cat:"Pricing",q:"Price skimming means:",opts:["Starting with a high price, then lowering it over time","Matching competitors' prices exactly","Giving the product away free","Pricing below cost permanently"],answer:0,why:"Skimming captures early adopters willing to pay more, then lowers price to reach wider markets."},
+ {cat:"Content Marketing",q:"Which best describes content marketing?",opts:["Buying ad slots on TV","Cold-calling potential leads","Creating valuable content to attract and engage an audience","Discounting products to clear inventory"],answer:2,why:"Content marketing earns attention by being useful, rather than interrupting people with ads."},
+ {cat:"Media Types",q:"Which is an example of OWNED media?",opts:["A paid search ad","A newspaper review of your product","Your company's own blog","A sponsored influencer post"],answer:2,why:"Owned media is what you control (website, blog, email list). Paid is bought; earned is coverage others give you."},
+ {cat:"Digital",q:"SEO stands for:",opts:["Sales Engagement Optimization","Search Engine Optimization","Social Event Organization","Site Error Output"],answer:1,why:"SEO improves how a site ranks in unpaid search results."},
+ {cat:"Product Life Cycle",q:"In the product life cycle, which stage comes after Growth?",opts:["Introduction","Decline","Maturity","Development"],answer:2,why:"The cycle runs Introduction → Growth → Maturity → Decline. Sales level off in Maturity."},
+ {cat:"Experimentation",q:"In an A/B test, what is actually being compared?",opts:["Two audiences with the same ad","Two versions of something to see which performs better","Two pricing currencies","Two different companies"],answer:1,why:"An A/B test shows two versions to similar audiences and measures which gets better results."}
+];
+const ACCENTS = ["#FF5A44","#F2B705","#12877C","#D6336C"];
+
+/* ===================== STATE ===================== */
+let questions = [], solvedCount = 0, wrongCount = 0, current = null, pendingSolve = false;
+let missed = new Set();
+let player = { name:"", group:"" };
+let startTime = 0, elapsed = 0, timerId = null, gameActive = false;
+let lastSavedId = null, lastResult = null;
+let lbView = "All", lastFocus = null;
+
+/* ===================== HELPERS ===================== */
+function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function fmtTime(s){ s=Math.max(0,Math.round(s||0)); return `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`; }
+function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!==undefined) e.textContent=text; return e; }
+function cleanName(s){ return String(s||"").replace(/\s+/g," ").trim().slice(0,30); }
+function playerKey(r){ return cleanName(r.name).toLowerCase()+"|"+r.group; }
+function openOverlay(id, focusId){ lastFocus=document.activeElement; $(id).classList.add("open"); if(focusId) setTimeout(()=>$(focusId)?.focus(),0); }
+function closeOverlay(id){ $(id).classList.remove("open"); }
+function isOpen(id){ return $(id).classList.contains("open"); }
+
+/* ===================== STORAGE ===================== */
+/* One interface, two back ends: Firebase Realtime Database (live, shared)
+   or localStorage (this device only) when Firebase isn't configured. */
+const store = {
+  mode: "local", rows: [], fb: null, subs: new Set(),
+  memory: [], localOk: true, readError: null,
+  notify(){ this.subs.forEach(fn=>fn()); },
+  readLocal(){
+    try{ return JSON.parse(localStorage.getItem(LOCAL_KEY)||"[]"); }
+    catch(e){ this.localOk=false; return this.memory.slice(); }
+  },
+  writeLocal(list){
+    this.memory = list.slice();
+    try{ localStorage.setItem(LOCAL_KEY, JSON.stringify(list)); this.localOk=true; return true; }
+    catch(e){ this.localOk=false; return false; }
+  },
+
+  async init(){
+    this.rows = this.readLocal();
+
+    // 1) Firebase Realtime Database (GitHub Pages / any web host)
+    const c = CFG.firebase || {};
+    const keyFilled = c.apiKey && !/^PASTE/i.test(c.apiKey);
+    if(keyFilled && (!c.databaseURL || /your-project/.test(c.databaseURL))){
+      setConn("error", "The Firebase settings are missing databaseURL. Copy it from the top of Firebase → Realtime Database → Data (it ends in firebaseio.com or firebasedatabase.app).");
+      this.notify(); return;
+    }
+    if(keyFilled){ await this.initFirebase(c); this.notify(); return; }
+
+    // 2) Not configured yet: this browser only
+    setConn("local"); this.notify();
+  },
+
+  async initFirebase(c){
+    setConn("connecting");
+    try{
+      const base = `https://www.gstatic.com/firebasejs/${FIREBASE_VER}/`;
+      const appMod = await import(base+"firebase-app.js");
+      const dbMod  = await import(base+"firebase-database.js");
+      const app = appMod.initializeApp(c);
+      const db  = dbMod.getDatabase(app);
+      this.fb = { db, ...dbMod };
+      this.mode = "firebase"; this.rows = [];
+      const q = dbMod.query(dbMod.ref(db, SCORES_PATH), dbMod.orderByChild("score"), dbMod.limitToLast(1000));
+      dbMod.onValue(q, snap=>{
+        this.readError=null;
+        const rows=[]; snap.forEach(ch=>{ rows.push({ id:ch.key, ...ch.val() }); });
+        this.rows = rows; setConn("live"); this.notify();
+      }, err=>{
+        console.error(err);
+        this.readError = err;
+        setConn("error", explainFirebaseError(err));
+      });
+      dbMod.onValue(dbMod.ref(db, ".info/connected"), s=>{
+        if(this.readError) return;               // keep the real error visible
+        setConn(s.val() ? "live" : "offline");
+      });
+    }catch(e){
+      console.error("Firebase failed to load:", e);
+      this.mode="local"; this.rows=this.readLocal();
+      setConn("error","Couldn't load Firebase. Check your internet connection, and open the game from your GitHub Pages link rather than as a file.");
+    }
+  },
+
+  async add(entry){
+    if(this.mode==="firebase" && this.fb){
+      const { db, ref, push, set, serverTimestamp } = this.fb;
+      const r = push(ref(db, SCORES_PATH));
+      lastSavedId = r.key;
+      await Promise.race([
+        set(r, { ...entry, at: serverTimestamp() }),
+        new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")), 12000))
+      ]);
+      return "live";
+    }
+    const id = "local-"+Date.now();
+    const list = this.readLocal(); list.push({ id, ...entry, at: Date.now() });
+    const ok = this.writeLocal(list);
+    this.rows = list; lastSavedId = id; this.notify();
+    return ok ? "local" : "memory";
+  }
+};
+
+function explainFirebaseError(err){
+  const code = String(err && (err.code || err.message) || "").toLowerCase();
+  if(code.includes("permission")) return "Firebase blocked access. In Firebase → Realtime Database → Rules, paste database.rules.json and click Publish.";
+  if(code.includes("timeout")) return "The database didn't respond. Check the internet connection and the databaseURL in the Firebase settings.";
+  return "Couldn't reach the database: " + (err && (err.code || err.message) || "unknown error");
+}
+
+function setConn(state, detail){
+  const dot=$("connDot"), txt=$("connText");
+  dot.className="dot";
+  const map = {
+    live:["live","Live leaderboard"], connecting:["","Connecting…"], offline:["err","Offline — reconnecting"],
+    error:["err","Leaderboard problem"], local:["","This device only"]
+  };
+  const [cls,label] = map[state]||map.local;
+  if(cls) dot.classList.add(cls);
+  txt.textContent = label;
+  $("connChip").title = detail || "";
+  $("lbFoot").textContent = detail || (state==="live"||state==="offline"
+    ? "Live: everyone using this page sees the same leaderboard."
+    : state==="connecting" ? "Connecting to the leaderboard…"
+    : "Scores are saved in this browser only. Add your Firebase settings at the top of index.html to share them.");
+  $("lbFoot").style.color = state==="error" ? "var(--magenta)" : "";
+}
+
+/* ===================== GAME ===================== */
+function buildQuestions(){
+  return shuffle(BANK).slice(0, TILES).map(item=>({
+    ...item,
+    options: shuffle(item.opts.map((text,i)=>({ text, correct: i===item.answer }))),
+    solved:false, tried:new Set()
+  }));
+}
+function renderBoard(){
+  const grid=$("tileGrid"); grid.innerHTML="";
+  questions.forEach((item,i)=>{
+    const b=el("button","tile"); b.dataset.index=i;
+    b.setAttribute("aria-label",`Tile ${i+1}: ${item.cat}`);
+    const bar=el("div","bar"); bar.style.background=ACCENTS[i%ACCENTS.length];
+    b.append(bar, el("div","tnum",String(i+1)), el("div","tcat",item.cat));
+    b.addEventListener("click",()=>openQuestion(i));
+    grid.appendChild(b);
+  });
+}
+function updateHud(){
+  $("hudSolved").innerHTML=""; $("hudSolved").append(String(solvedCount), el("span",null,` / ${questions.length}`));
+  $("hudWrong").innerHTML="";  $("hudWrong").append(String(wrongCount), el("span",null, wrongCount===1?" miss":" misses"));
+  $("hudFill").style.width = `${questions.length? solvedCount/questions.length*100 : 0}%`;
+}
+function startTimer(){
+  clearInterval(timerId); startTime=Date.now(); elapsed=0; $("hudTime").textContent="0:00";
+  timerId=setInterval(()=>{ elapsed=(Date.now()-startTime)/1000; $("hudTime").textContent=fmtTime(elapsed); },500);
+}
+function stopTimer(){ clearInterval(timerId); elapsed=(Date.now()-startTime)/1000; $("hudTime").textContent=fmtTime(elapsed); }
+function computeScore(){ return Math.max(0, Math.round(solvedCount*100 - wrongCount*25 + Math.max(0, 300-elapsed))); }
+
+function openQuestion(i){
+  if(!gameActive || questions[i].solved) return;
+  current=i; pendingSolve=false;
+  const item=questions[i];
+  $("qCat").textContent=item.cat; $("qText").textContent=item.q;
+  $("qFeedback").textContent=""; $("qFeedback").className="feedback";
+  $("qExplainWrap").hidden=true;
+  const wrap=$("qOptions"); wrap.innerHTML="";
+  item.options.forEach((opt,k)=>{
+    const b=el("button","opt"); b.dataset.k=k;
+    b.append(el("span","key",String(k+1)), el("span",null,opt.text));
+    if(item.tried.has(k)){ b.classList.add("incorrect"); b.disabled=true; }
+    b.addEventListener("click",()=>answer(k));
+    wrap.appendChild(b);
+  });
+  openOverlay("qOverlay");
+  wrap.querySelector(".opt:not(:disabled)")?.focus();
+}
+function answer(k){
+  if(current===null || pendingSolve) return;
+  const item=questions[current], opt=item.options[k];
+  const btn=$("qOptions").querySelector(`.opt[data-k="${k}"]`);
+  if(!btn || btn.disabled) return;
+  if(opt.correct){
+    pendingSolve=true;
+    item.solved=true; solvedCount++; updateHud();
+    $("qOptions").querySelectorAll(".opt").forEach(b=>b.disabled=true);
+    btn.classList.add("correct");
+    $("qFeedback").textContent="";
+    const ex=$("qExplain"); ex.innerHTML="";
+    const lead = el("strong",null, item.tried.size ? "Got it. " : "Correct! ");
+    ex.append(lead, item.why);
+    $("qExplainWrap").hidden=false;
+    $("qContinue").textContent = solvedCount===questions.length ? "See results" : "Continue";
+    $("qContinue").focus();
+  }else{
+    item.tried.add(k); missed.add(current); wrongCount++; updateHud();
+    btn.classList.add("incorrect"); btn.disabled=true;
+    $("qFeedback").textContent="Not quite — try another option."; $("qFeedback").className="feedback bad";
+    const tile=document.querySelector(`.tile[data-index="${current}"]`);
+    if(tile){ tile.classList.add("wrong-flash"); setTimeout(()=>tile.classList.remove("wrong-flash"),400); }
+    $("qOptions").querySelector(".opt:not(:disabled)")?.focus();
+  }
+}
+function closeQuestion(){
+  const idx=current; const finishing = pendingSolve;
+  closeOverlay("qOverlay"); current=null; pendingSolve=false;
+  if(finishing){
+    const tile=document.querySelector(`.tile[data-index="${idx}"]`);
+    if(tile){ tile.classList.add("solved"); tile.setAttribute("aria-label",`Tile ${idx+1}: ${questions[idx].cat} — solved`); }
+    if(solvedCount===questions.length){ setTimeout(finishGame, 450); return; }
+    document.querySelector(".tile:not(.solved)")?.focus();
+  }else{
+    document.querySelector(`.tile[data-index="${idx}"]`)?.focus();
+  }
+}
+
+/* ===================== START / FINISH ===================== */
+function fillGroups(){
+  const sel=$("playerGroup"); sel.innerHTML="";
+  sel.appendChild(Object.assign(el("option",null,"Choose your group…"),{value:""}));
+  GROUPS.forEach(g=> sel.appendChild(Object.assign(el("option",null,g),{value:g})));
+}
+function showStart(keepGroup=true){
+  gameActive=false; clearInterval(timerId);
+  $("startError").textContent="";
+  $("playerName").value="";
+  $("playerGroup").value = keepGroup ? player.group : "";
+  closeOverlay("winOverlay");
+  openOverlay("startOverlay","playerName");
+}
+function beginGame(){
+  const name=cleanName($("playerName").value), group=$("playerGroup").value;
+  if(!name){ $("startError").textContent="Enter your name to start."; $("playerName").focus(); return; }
+  if(!group){ $("startError").textContent="Choose your class group to start."; $("playerGroup").focus(); return; }
+  player={name,group};
+  try{ localStorage.setItem("mm-last-group", group); }catch(e){}
+  const tag=$("playerTag"); tag.hidden=false; tag.innerHTML="";
+  tag.append("Playing as ", el("strong",null,name), ` · ${group}`);
+  closeOverlay("startOverlay");
+  newGame();
+}
+function newGame(){
+  questions=buildQuestions(); solvedCount=0; wrongCount=0; missed=new Set(); current=null;
+  lastSavedId=null; lastResult=null;
+  updateHud(); renderBoard();
+  $("artSub").textContent = `CERTIFIED · ${player.name.toUpperCase() || "YOU"}`;
+  gameActive=true; startTimer();
+  document.querySelector(".tile")?.focus();
+}
+async function finishGame(){
+  gameActive=false; stopTimer();
+  const score=computeScore();
+  const acc=Math.round(solvedCount/(solvedCount+wrongCount)*100);
+  lastResult={ score, group:player.group, key:playerKey(player) };
+  $("winScore").textContent=score; $("winAcc").textContent=acc+"%";
+  $("winWrong").textContent=wrongCount; $("winTime").textContent=fmtTime(elapsed);
+  $("winBadge").textContent = acc===100 ? "A+" : acc>=85 ? "A" : acc>=70 ? "B" : acc>=55 ? "C" : "D";
+  $("winTitle").textContent = acc===100 ? `Flawless, ${player.name}!` : `Well done, ${player.name}!`;
+
+  // review list
+  const list=$("reviewList"); list.innerHTML="";
+  [...missed].forEach(i=>{
+    const q=questions[i], li=el("li");
+    li.append(el("div",null,q.q), Object.assign(el("div","ans","✓ "+q.opts[q.answer])), el("div","why",q.why));
+    list.appendChild(li);
+  });
+  $("reviewBox").hidden = missed.size===0; $("reviewBox").open=false;
+  $("reviewSummary").textContent = `Review the ${missed.size} question${missed.size===1?"":"s"} you missed`;
+
+  $("rankLine").textContent="";
+  openOverlay("winOverlay","nextPlayer");
+  $("saveStatus").textContent="Saving your score…"; $("saveStatus").style.color="";
+  try{
+    const where = await store.add({ name:player.name, group:player.group, score, wrong:wrongCount, timeSec:Math.round(elapsed), acc, missed:missed.size });
+    $("saveStatus").textContent =
+      where==="live"   ? "Score saved to the live leaderboard." :
+      where==="local"  ? "Score saved on this device." :
+                         "Score shown for this session only — this browser is blocking storage.";
+  }catch(e){
+    console.error(e);
+    const msg = String(e && (e.code||e.message)||"").toLowerCase();
+    $("saveStatus").textContent = msg.includes("permission")
+      ? "Score not saved: the database rules are blocking it. (Teacher: publish database.rules.json in Firebase.)"
+      : msg.includes("timeout") ? "Score not saved yet: no connection to the database."
+      : "Couldn't save your score. Please tell your teacher.";
+    $("saveStatus").style.color="var(--magenta)";
+    lastSavedId=null;
+  }
+  updateRankLine();
+}
+function updateRankLine(){
+  if(!lastResult || !isOpen("winOverlay")) return;
+  const best = bestPerPlayer(validRows().filter(r=>r.group===lastResult.group));
+  const mine = best.find(r=>playerKey(r)===lastResult.key);
+  if(!mine){ return; }
+  const rank = best.indexOf(mine)+1;
+  const line=$("rankLine"); line.innerHTML="";
+  const isPB = mine.score===lastResult.score;
+  line.append(isPB ? "You're " : "Your best puts you ", el("strong",null,`#${rank}`), ` of ${best.length} in ${lastResult.group}`);
+  if(!isPB) line.append(` (best: ${mine.score})`);
+}
+
+/* ===================== LEADERBOARD ===================== */
+function sortRows(rows){ return rows.slice().sort((a,b)=> (b.score-a.score) || ((a.timeSec||0)-(b.timeSec||0)) || ((a.at||0)-(b.at||0))); }
+function bestPerPlayer(rows){
+  const m=new Map();
+  sortRows(rows).forEach(r=>{ const k=playerKey(r); if(!m.has(k)) m.set(k,r); });
+  return [...m.values()];
+}
+function validRows(){ return store.rows.filter(r=>r && typeof r.score==="number" && r.name && GROUPS.includes(r.group)); }
+
+function renderTabs(){
+  const wrap=$("lbTabs"); wrap.innerHTML="";
+  ["All",...GROUPS,"__groups"].forEach(v=>{
+    const b=el("button","tab"+(v==="__groups"?" standings":""), v==="__groups"?"Group standings":v);
+    b.setAttribute("aria-pressed",String(v===lbView));
+    b.addEventListener("click",()=>{ lbView=v; renderTabs(); renderLeaderboard(); });
+    wrap.appendChild(b);
+  });
+}
+function renderLeaderboard(){
+  const showGroups = lbView==="__groups";
+  $("lbPlayers").hidden=showGroups; $("lbGroups").hidden=!showGroups;
+  if(showGroups){ renderStandings(); return; }
+
+  let rows=validRows().filter(r=>lbView==="All"||r.group===lbView);
+  rows = $("bestOnly").checked ? bestPerPlayer(rows) : sortRows(rows);
+  $("lbSub").textContent = lbView==="All" ? "Top scores across all groups" : `Top scores in ${lbView}`;
+  $("lbCount").textContent = rows.length ? `${rows.length} ${$("bestOnly").checked?"player":"game"}${rows.length===1?"":"s"}` : "";
+
+  // podium (display order 2,1,3)
+  const pod=$("podium"); pod.innerHTML="";
+  [[1,"🥈","p2"],[0,"🥇","p1"],[2,"🥉","p3"]].forEach(([idx,medal,cls])=>{
+    const r=rows[idx], d=el("div","pod "+cls+(r?"":" empty"));
+    d.append(el("div","medal",medal), el("div","pname", r? cleanName(r.name):"—"), el("div","pgroup", r? r.group:""), el("div","pscore", r? String(r.score):""));
+    if(r && r.id===lastSavedId) d.style.outline="2px solid var(--gold)";
+    pod.appendChild(d);
+  });
+  pod.hidden = rows.length===0;
+
+  const body=$("lbBody"); body.innerHTML="";
+  rows.slice(3,100).forEach((r,i)=>{
+    const tr=el("tr"); if(r.id===lastSavedId) tr.className="me";
+    tr.append(el("td","rank",String(i+4)), el("td","name",cleanName(r.name)), el("td","hide-sm",r.group),
+      el("td","num",String(r.score)), el("td","num hide-sm",String(r.wrong??0)), el("td","num",fmtTime(r.timeSec)));
+    body.appendChild(tr);
+  });
+  $("lbEmpty").hidden = rows.length>0;
+  $("lbTableWrap").hidden = rows.length>0 && rows.length<=3;
+}
+function renderStandings(){
+  $("lbSub").textContent="Groups ranked by the average of each player's best score";
+  const rows=validRows(), body=$("grpBody"); body.innerHTML="";
+  const stats = GROUPS.map(g=>{
+    const best=bestPerPlayer(rows.filter(r=>r.group===g));
+    const avg = best.length ? Math.round(best.reduce((s,r)=>s+r.score,0)/best.length) : 0;
+    return { g, players:best.length, avg, top: best[0]?.score ?? 0 };
+  }).filter(s=>s.players>0).sort((a,b)=>b.avg-a.avg || b.players-a.players);
+  stats.forEach((s,i)=>{
+    const tr=el("tr"); if(s.g===player.group) tr.className="me";
+    tr.append(el("td","rank",String(i+1)), el("td",null,s.g), el("td","num",String(s.players)), el("td","num",String(s.avg)), el("td","num",String(s.top)));
+    body.appendChild(tr);
+  });
+  $("grpEmpty").hidden = stats.length>0;
+}
+function openLeaderboard(){
+  if(player.group && !openLeaderboard.seen){ lbView=player.group; }
+  openLeaderboard.seen=true;
+  renderTabs(); renderLeaderboard();
+  openOverlay("lbOverlay","lbClose");
+}
+function closeLeaderboard(){ closeOverlay("lbOverlay"); lastFocus?.focus?.(); }
+
+/* ===================== WIRING ===================== */
+$("startBtn").addEventListener("click",beginGame);
+$("playerName").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); beginGame(); }});
+$("startLbBtn").addEventListener("click",openLeaderboard);
+$("topLbBtn").addEventListener("click",openLeaderboard);
+$("winLbBtn").addEventListener("click",openLeaderboard);
+$("lbClose").addEventListener("click",closeLeaderboard);
+$("bestOnly").addEventListener("change",renderLeaderboard);
+$("qClose").addEventListener("click",closeQuestion);
+$("qContinue").addEventListener("click",closeQuestion);
+$("nextPlayer").addEventListener("click",()=>showStart(true));
+$("samePlayer").addEventListener("click",()=>{ closeOverlay("winOverlay"); newGame(); });
+$("changePlayer").addEventListener("click",()=>{ if(gameActive && solvedCount>0 && !confirm("Leave this game? Progress won't be saved.")) return; showStart(true); });
+["qOverlay","lbOverlay"].forEach(id=> $(id).addEventListener("click",e=>{ if(e.target.id===id){ id==="qOverlay"?closeQuestion():closeLeaderboard(); }}));
+
+document.addEventListener("keydown",e=>{
+  if(isOpen("lbOverlay")){ if(e.key==="Escape") closeLeaderboard(); return; }
+  if(isOpen("qOverlay")){
+    if(e.key==="Escape"){ closeQuestion(); return; }
+    if(/^[1-4]$/.test(e.key) && !pendingSolve){ answer(Number(e.key)-1); return; }
+    if(e.key==="Enter" && pendingSolve && document.activeElement!==$("qContinue")){ e.preventDefault(); closeQuestion(); }
+  }
+});
+
+store.subs.add(()=>{ if(isOpen("lbOverlay")) renderLeaderboard(); updateRankLine(); });
+
+/* ===================== BOOT ===================== */
+fillGroups();
+try{ const g=localStorage.getItem("mm-last-group"); if(g && GROUPS.includes(g)) $("playerGroup").value=g; }catch(e){}
+questions=buildQuestions(); updateHud(); renderBoard();
+$("playerName").focus();
+store.init();
+</script>
+</body>
+</html>
